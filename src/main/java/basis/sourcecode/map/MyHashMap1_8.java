@@ -140,6 +140,50 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
         return new TreeNode(p.hash, p.key, p.value, next);
     }
 
+    public V remove(Object key) {
+        Node<K, V> e;
+        return (e = removeNode(hash(key), key, null, false, true)) == null ? null : e.value;
+    }
+
+    final Node<K, V> removeNode(int hash, Object key, Object value, boolean matchValue, boolean movable) {
+        Node<K, V>[] tab;
+        Node<K, V> p;
+        int n, index;
+        if ((tab = table) != null && (n = tab.length) > 0 && ((p = tab[index = (n - 1) & hash]) != null)) {
+            Node<K, V> node = null, e;
+            K k;
+            V v;
+            if (p.hash == hash && ((k = p.key) == key || (k != null && k.equals(key)))) {
+                node = p;
+            } else if ((e = p.next) != null) {
+                if (p instanceof TreeNode) {
+                    node = ((TreeNode<K, V>) p).getTreeNode(hash, key);
+                } else {
+                    do {
+                        if (e.hash == hash && ((k = e.key) == key || (k != null && k.equals(key)))) {
+                            node = e;
+                            break;
+                        }
+                    } while ((e = e.next) != null);
+                }
+            }
+            if (node != null && (!matchValue || (v = node.value) == value || (v != null && v.equals(value)))) {
+                if (node instanceof TreeNode) {
+                    ((TreeNode<K, V>) node).removeTreeNode(this, tab, movable);
+                } else if (node == p) {
+                    tab[index] = node.next;
+                } else {
+                    p.next = node.next;
+                }
+                ++modCount;
+                --size;
+                afterNodeRemoval(node);
+                return node;
+            }
+        }
+        return null;
+    }
+
     final Node<K, V>[] resize() {
         Node<K, V>[] oldTab = table;
         int oldCap = (oldTab == null) ? 0 : oldTab.length;
@@ -360,7 +404,7 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
                 } else {
                     if (xppl != null && xppl.red) {
                         xppl.red = false;
-                        xp.red= false;
+                        xp.red = false;
                         xpp.red = true;
                         x = xpp;
                     } else {
@@ -380,6 +424,10 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
             }
         }
 
+        final TreeNode<K, V> getTreeNode(int h, Object k) {
+            return ((parent != null) ? root() : this).find(h, k, null);
+        }
+
         static <K, V> void moveRootToFront(Node<K, V>[] tab, TreeNode<K, V> root) {
             int n;
             if (root != null && tab != null && (n = tab.length) > 0) {
@@ -391,7 +439,8 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
                     TreeNode<K, V> rp = root.prev;
                     if ((rn = root.next) != null) {
                         ((TreeNode<K, V>) rn).prev = rp;
-                    } if (rp != null) {
+                    }
+                    if (rp != null) {
                         rp.next = rn;
                     }
                     if (first != null) {
@@ -446,6 +495,21 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
                     moveRootToFront(tab, balanceInsertion(root, x));
                     return null;
                 }
+            }
+        }
+
+        final void removeTreeNode(MyHashMap1_8<K, V> map, Node<K, V>[] tab, boolean movable) {
+            int n;
+            if (tab == null || (n = tab.length) == 0) {
+                return;
+            }
+            int index = (n - 1) & hash;
+            TreeNode<K, V> first = (TreeNode<K, V>) tab[index], root = first, rl;
+            TreeNode<K, V> succ = (TreeNode<K, V>) next, pred = prev;
+            if (pred == null) {
+                tab[index] = first = succ;
+            } else {
+                
             }
         }
 
