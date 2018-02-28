@@ -74,6 +74,10 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
         return new Node(hash, key, value, next);
     }
 
+    TreeNode<K, V> newTreeNode(int hash, K key, V value, Node<K, V> next) {
+        return new TreeNode(hash, key, value, next);
+    }
+
     public V put(K key, V value) {
         return putVal(hash(key), key, value, false, true);
     }
@@ -126,6 +130,10 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
         }
         afterNodeInsertion(evict);
         return null;
+    }
+
+    Node<K, V> replacementNode(Node<K, V> p, Node<K, V> next) {
+        return new Node(p.hash, p.key, p.value, next);
     }
 
     TreeNode<K, V> replacementTreeNode(Node<K, V> p, Node<K, V> next) {
@@ -447,6 +455,14 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
             }
         }
 
+        static int tieBreakOrder(Object a, Object b) {
+            int d;
+            if (a == null || b == null || (d = a.getClass().getName().compareTo(b.getClass().getName())) == 0) {
+                d = (System.identityHashCode(a) <= System.identityHashCode(b) ? -1 : 1);
+            }
+            return d;
+        }
+
         final void treeify(Node<K, V>[] tab) {
             TreeNode<K, V> root = null;
             for (TreeNode<K, V> x = this, next; x != null; x = next) {
@@ -486,6 +502,20 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
                 }
             }
             moveRootToFront(tab, root);
+        }
+
+        final Node<K, V> untreeify(MyHashMap1_8<K, V> map) {
+            Node<K, V> hd = null, tl = null;
+            for (Node<K, V> q = this; q != null; q = q.next) {
+                Node<K, V> p = map.replacementNode(q, null);
+                if (tl == null) {
+                    hd = p;
+                } else {
+                    tl.next = p;
+                }
+                tl = p;
+            }
+            return hd;
         }
     }
 }
