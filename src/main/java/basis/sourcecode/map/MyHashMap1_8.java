@@ -329,6 +329,57 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
             return null;
         }
 
+        static <K, V> TreeNode<K, V> balanceInsertion(TreeNode<K, V> root, TreeNode<K, V> x) {
+            x.red = true;
+            for (TreeNode<K, V> xp, xpp, xppl, xppr; ; ) {
+                if ((xp = x.parent) == null) {
+                    x.red = false;
+                    return x;
+                } else if (!xp.red || (xpp = xp.parent) == null) {
+                    return root;
+                }
+                if (xp == (xppl = xpp.left)) {
+                    if ((xppr = xpp.right) != null && xppr.red) {
+                        xppr.red = false;
+                        xppl.red = false;
+                        xpp.red = true;
+                        x = xpp;
+                    } else {
+                        if (x == xp.right) {
+                            root = rotateLeft(root, x = xp);
+                            xpp = (xp = x.parent) == null ? null : xp.parent;
+                        }
+                        if (xp != null) {
+                            xp.red = false;
+                            if (xpp != null) {
+                                xpp.red = true;
+                                root = rotateRight(root, xpp);
+                            }
+                        }
+                    }
+                } else {
+                    if (xppl != null && xppl.red) {
+                        xppl.red = false;
+                        xp.red= false;
+                        xpp.red = true;
+                        x = xpp;
+                    } else {
+                        if (x == xp.left) {
+                            root = rotateRight(root, x = xp);
+                            xpp = (xp = x.parent) == null ? null : xp.parent;
+                        }
+                        if (xp != null) {
+                            xp.red = false;
+                            if (xpp != null) {
+                                xpp.red = true;
+                                root = rotateLeft(root, xpp);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         static <K, V> void moveRootToFront(Node<K, V>[] tab, TreeNode<K, V> root) {
             int n;
             if (root != null && tab != null && (n = tab.length) > 0) {
@@ -405,6 +456,44 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
                 }
                 r = p;
             }
+        }
+
+        static <K, V> TreeNode<K, V> rotateLeft(TreeNode<K, V> root, TreeNode<K, V> p) {
+            TreeNode<K, V> r, pp, rl;
+            if (p != null && (r = p.right) != null) {
+                if ((rl = p.right = r.left) != null) {
+                    rl.parent = p;
+                }
+                if ((pp = r.parent = p.parent) == null) {
+                    (root = r).red = false;
+                } else if (pp.left == p) {
+                    pp.left = r;
+                } else {
+                    pp.right = r;
+                }
+                r.left = p;
+                p.parent = r;
+            }
+            return root;
+        }
+
+        static <K, V> TreeNode<K, V> rotateRight(TreeNode<K, V> root, TreeNode<K, V> p) {
+            TreeNode<K, V> l, pp, lr;
+            if (p != null && (l = p.left) != null) {
+                if ((lr = p.left = l.right) != null) {
+                    lr.parent = p;
+                }
+                if ((pp = root.parent = p.parent) == null) {
+                    (root = l).red = false;
+                } else if (pp.right == p) {
+                    pp.right = l;
+                } else {
+                    pp.left = l;
+                }
+                l.right = p;
+                p.parent = l;
+            }
+            return root;
         }
 
         final void split(MyHashMap1_8 map, Node<K, V>[] tab, int index, int bit) {
