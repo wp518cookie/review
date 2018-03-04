@@ -512,7 +512,47 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
             if (pred == null) {
                 tab[index] = first = succ;
             } else {
-
+                pred.next = succ;
+            }
+            if (succ != null) {
+                succ.prev = pred;
+            }
+            if (first == null) {
+                return;
+            }
+            if (root.parent != null) {
+                root = root.root();
+            }
+            if (root == null || root.right == null || (rl = root.left) == null || rl.left == null) {
+                tab[index] = first.untreeify(map);
+                return;
+            }
+            TreeNode<K, V> p = this, pl = left, pr = right, replacement;
+            if (pl != null && pr != null) {
+                TreeNode<K, V> s = pr, sl;
+                while ((sl = s.left) != null) {
+                    s = sl;
+                }
+                boolean c = s.red; s.red = p.red; p.red = c;
+                TreeNode<K, V> sr = s.right;
+                TreeNode<K, V> pp = p.parent;
+                if (s == pr) {
+                    p.parent = s;
+                    s.right = p;
+                } else {
+                    TreeNode<K, V> sp = s.parent;
+                    if ((p.parent = sp) != null) {
+                        if (s == sp.left) {
+                            sp.left = p;
+                        } else {
+                            sp.right = p;
+                        }
+                    }
+                    if ((s.right = pr) != null) {
+                        pr.parent = s;
+                    }
+                }
+                p.left = null;
             }
         }
 
