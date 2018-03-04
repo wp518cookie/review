@@ -1,3 +1,4 @@
+/*
 package basis.sourcecode.map;
 
 import java.lang.reflect.ParameterizedType;
@@ -6,9 +7,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+*/
 /**
  * Created by Administrator on 2018/2/26.
- */
+ *//*
+
 public class MyHashMap1_8<K, V> implements Map<K, V> {
     static final int DEFAULT_INITIAL_CAPACITY = 1 << 4;
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
@@ -509,7 +512,7 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
             if (pred == null) {
                 tab[index] = first = succ;
             } else {
-                
+
             }
         }
 
@@ -672,3 +675,4 @@ public class MyHashMap1_8<K, V> implements Map<K, V> {
         }
     }
 }
+*/
