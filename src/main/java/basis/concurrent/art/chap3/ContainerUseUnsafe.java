@@ -19,5 +19,5 @@ public class ContainerUseUnsafe {
     private SomeThing object;
 
     private Object value;
-    
+
 }
