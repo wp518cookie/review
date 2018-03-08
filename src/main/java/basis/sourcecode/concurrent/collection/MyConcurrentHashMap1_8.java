@@ -7,6 +7,7 @@ import java.io.ObjectStreamField;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -149,6 +150,81 @@ public class MyConcurrentHashMap1_8<K, V> {
         return null;
     }
 
+    private final void fullAddCount(long x, boolean wasUncontended) {
+        int h = new Random().nextInt();
+//        if ((h = ThreadLocalRandom.getProbe()) == 0) {
+//      {
+
+//      }
+        boolean collide = false;
+        for (; ; ) {
+            CounterCell[] as; CounterCell a; int n; long v;
+            if ((as = counterCells) != null && (n = as.length) > 0) {
+                if ((a = as [(n - 1) & h]) == null) {
+                    if (cellsBusy == 0) {
+                        CounterCell r = new CounterCell(x);
+                        if (cellsBusy == 0 && U.compareAndSwapInt(this, CELLSBUSY, 0, 1)) {
+                            boolean created = false;
+                            try {
+                                CounterCell[] rs;
+                                int m, j;
+                                if ((rs = counterCells) != null && (m = rs.length) > 0 && rs[j = (m - 1) & h] == null) {
+                                    rs[j] = r;
+                                    created = true;
+                                }
+                            } finally {
+                                cellsBusy = 0;
+                            }
+                            if (created) {
+                                break;
+                            }
+                            continue;
+                        }
+                    }
+                    collide = false;
+                } else if (!wasUncontended) {
+                    wasUncontended = true;
+                } else if (U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x)) {
+                    break;
+                } else if (counterCells != as || n >= NCPU) {
+                    collide = false;
+                } else if (cellsBusy == 0 && U.compareAndSwapInt(this, CELLSBUSY, 0, 1)) {
+                    try {
+                        if (counterCells == as) {
+                            CounterCell[] rs = new CounterCell[n << 1];
+                            for (int i = 0; i < n; i++) {
+                                rs[i] = as[i];
+                            }
+                            counterCells = rs;
+                        }
+                    } finally {
+                        cellsBusy = 0;
+                    }
+                    collide = false;
+                    continue;
+                }
+//                h = ThreadLocalRandom.advanceProbe(h);
+            } else if (cellsBusy == 0 && counterCells == as && U.compareAndSwapInt(this, CELLSBUSY, 0, 1)) {
+                boolean init = false;
+                try {
+                    if (counterCells == as) {
+                        CounterCell[] rs = new CounterCell[2];
+                        rs[h & 1] = new CounterCell(x);
+                        counterCells = rs;
+                        init = true;
+                    }
+                } finally {
+                    cellsBusy = 0;
+                }
+                if (init) {
+                    break;
+                }
+            } else if (U.compareAndSwapLong(this, BASECOUNT, v = baseCount, v + x)) {
+                break;
+            }
+        }
+    }
+
     //todo
     //question: the function of rs
     final Node<K, V>[] helpTransfer(Node<K, V>[] tab, Node<K, V> f) {
@@ -177,12 +253,14 @@ public class MyConcurrentHashMap1_8<K, V> {
             if ((sc = sizeCtl) < 0) {
                 //说明有其他线程在扩容
                 Thread.yield();
+                //-1表示只有一个线程在进行扩容
             } else if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
                 try {
                     if ((tab = table) == null || tab.length == 0) {
                         int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
                         Node<K, V>[] nt = (Node<K, V>[]) new Node<?, ?>[n];
                         table = tab = nt;
+                        //当前n的0.75倍
                         sc = n - (n >>> 2);
                     }
                 } finally {
