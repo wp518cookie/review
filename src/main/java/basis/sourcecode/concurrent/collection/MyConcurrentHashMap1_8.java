@@ -5,6 +5,7 @@ import sun.misc.Unsafe;
 
 import java.io.ObjectStreamField;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by ping.wu on 2018/3/3.
@@ -17,7 +18,7 @@ public class MyConcurrentHashMap1_8<K, V> {
     private transient volatile int sizeCtl;
     private transient volatile int transferIndex;
     private transient volatile int cellsBusy;
-    private transient volatile CounterCell[] conterCells;
+    private transient volatile CounterCell[] counterCells;
     private transient KeySetView<K, V> keySet;
     private transient ValuesView<K, V> values;
     private transient EntrySetView<K, V> entrySet;
@@ -83,6 +84,46 @@ public class MyConcurrentHashMap1_8<K, V> {
     //--------------------------------------method-------------------------------------------
     public MyConcurrentHashMap1_8() {
 
+    }
+
+    private final void addCount(long x, int check) {
+        CounterCell[] as; long b, s;
+        if ((as = counterCells) != null || !U.compareAndSwapLong(this, BASECOUNT, b = baseCount, s = b + x)) {
+            CounterCell a; long v; int m;
+            boolean uncontended = true;
+            //todo
+            //解决
+            if (as == null || (m = as.length - 1) < 0) {
+//                    || (a = as[ThreadLocalRandom.getProbe() & m]) == null ||
+//                    !(uncontended = U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x))) {
+                fullAddCount(x, uncontended);
+                return;
+            }
+            if (check <= 1) {
+                return;
+            }
+            s = sumCount();
+        }
+        if (check >= 0) {
+            Node<K, V>[] tab, nt; int n, sc;
+            while (s >= (long)(sc = sizeCtl) && (tab = table) != null &&
+                    (n = tab.length) < MAXIMUM_CAPACITY) {
+                int rs = resizeStamp(n);
+                if (sc < 0) {
+                    if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
+                            sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
+                            transferIndex <= 0) {
+                        break;
+                    }
+                    if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1)) {
+                        transfer(tab, nt);
+                    }
+                } else if (U.compareAndSwapInt(this, SIZECTL, sc, (rs << RESIZE_STAMP_SHIFT) + 2)) {
+                    transfer(tab, null);
+                }
+                s = sumCount();
+            }
+        }
     }
 
     //todo
@@ -169,7 +210,7 @@ public class MyConcurrentHashMap1_8<K, V> {
                                 }
                                 Node<K, V> pred = e;
                                 if ((e = e.next) == null) {
-                                    pred.next = new Node<K, V> (hash, key, value, null);
+                                    pred.next = new Node<K, V>(hash, key, value, null);
                                     break;
                                 }
                             }
@@ -215,6 +256,16 @@ public class MyConcurrentHashMap1_8<K, V> {
     private Node<K, V> tabAt(Node<K, V>[] tab, int index) {
         //ASHIFT = 2, 等于每次index * 4,4是每个元素占用字节大小
         return (Node<K, V>) U.getObjectVolatile(tab, ((long) index << ASHIFT) + ABASE);
+    }
+
+    private static final int tableSizeFor(int c) {
+        int n = c - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
     }
 
     private final void transfer(Node<K, V>[] tab, Node<K, V>[] nextTab) {
@@ -275,7 +326,7 @@ public class MyConcurrentHashMap1_8<K, V> {
             } else if ((fh = f.hash) == MOVED) {
                 advance = true;
             } else {
-                synchronized(f) {
+                synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         Node<K, V> ln, hn;
                         if (fh >= 0) {
@@ -296,7 +347,9 @@ public class MyConcurrentHashMap1_8<K, V> {
                                 ln = null;
                             }
                             for (Node<K, V> p = f; p != lastRun; p = p.next) {
-                                int ph = p.hash; K pk = p.key; V pv = p.val;
+                                int ph = p.hash;
+                                K pk = p.key;
+                                V pv = p.val;
                                 if ((ph & n) == 0) {
                                     ln = new Node<K, V>(ph, pk, pv, ln);
                                 } else {
@@ -333,8 +386,8 @@ public class MyConcurrentHashMap1_8<K, V> {
                                     ++hc;
                                 }
                             }
-                            ln = (lc <= UNTREEIFY_THRESHOLD) ? untreeify(lo) : (hc != 0) ? new TreeBin<K, V> (lo) : t;
-                            hn = (hc <= UNTREEIFY_THRESHOLD) ? untreeify(hi) : (lc != 0) ? new TreeBin<K, V> (hi) : t;
+                            ln = (lc <= UNTREEIFY_THRESHOLD) ? untreeify(lo) : (hc != 0) ? new TreeBin<K, V>(lo) : t;
+                            hn = (hc <= UNTREEIFY_THRESHOLD) ? untreeify(hi) : (lc != 0) ? new TreeBin<K, V>(hi) : t;
                             setTabAt(nextTab, i, ln);
                             setTabAt(nextTab, i + n, hn);
                             setTabAt(tab, i, fwd);
@@ -344,6 +397,85 @@ public class MyConcurrentHashMap1_8<K, V> {
                 }
             }
         }
+    }
+
+    private final void treeifyBin(Node<K, V>[] tab, int index) {
+        Node<K, V> b; int n, sc;
+        if (tab != null) {
+            if ((n = tab.length) < MIN_TREEIFY_CAPACITY) {
+                tryPresize(n << 1);
+            } else if ((b = tabAt(tab, index)) != null && b.hash >= 0) {
+                synchronized (b) {
+                    if (tabAt(tab, index) == b) {
+                        TreeNode<K, V> hd = null, tl = null;
+                        for (Node<K, V> e = b; e != null; e = e.next) {
+                            TreeNode<K, V> p = new TreeNode<K, V>(e.hash, e.key, e.val, null, null);
+                            if ((p.prev = tl) == null) {
+                                hd = p;
+                            } else
+                                tl.next = p;
+                            tl = p;
+                        }
+                        setTabAt(tab, index, new TreeBin<K, V>(hd));
+                    }
+                }
+            }
+        }
+    }
+
+    //todo
+    //该方法理解
+    private final void tryPresize(int size) {
+        //这一长串玩意是要干嘛
+        int c = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY : tableSizeFor(size + (size >>> 1) + 1);
+        int sc;
+        while ((sc = sizeCtl) >= 0) {
+            Node<K, V>[] tab = table; int n;
+            if (tab == null || (n = tab.length) == 0) {
+                n = (sc > c) ? sc : c;
+                if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
+                    try {
+                        if (table == tab) {
+                            Node<K, V>[] nt = (Node<K, V>[]) new Node<?, ?>[n];
+                            table = nt;
+                            sc = n - (n >>> 2);
+                        }
+                    } finally {
+                        sizeCtl = sc;
+                    }
+                }
+            } else if (c <= sc || n >= MAXIMUM_CAPACITY) {
+                break;
+            } else if (tab == table) {
+                int rs = resizeStamp(n);
+                if (sc < 0) {
+                    Node<K, V>[] nt;
+                    if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
+                            sc == rs + MAX_RESIZERS || (nt = nextTable) == null || transferIndex <= 0) {
+                        break;
+                    }
+                    if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1)) {
+                        transfer(tab, nt);
+                    }
+                } else if (U.compareAndSwapInt(this, SIZECTL, sc, (rs << RESIZE_STAMP_SHIFT) + 2)) {
+                    transfer(tab, null);
+                }
+            }
+        }
+    }
+
+    static <K, V> Node<K, V> untreeify(Node<K, V> b) {
+        Node<K, V> hd = null, tl = null;
+        for (Node<K, V> q = b; q != null; q = q.next) {
+            Node<K, V> p = new Node<K, V>(q.hash, q.key, q.val, null);
+            if (tl == null) {
+                hd = p;
+            } else {
+                tl.next = p;
+            }
+            tl = p;
+        }
+        return hd;
     }
 
     static final <K, V> boolean casTabAt(Node<K, V>[] tab, int i, Node<K, V> c, Node<K, V> v) {
@@ -434,10 +566,88 @@ public class MyConcurrentHashMap1_8<K, V> {
         static final int WRITER = 1;
         static final int WAITER = 2;
         static final int READER = 4;
+        private static final Unsafe U;
+        private static final long LOCKSTATE;
+        static {
+            try {
+                U = UnsafeGenerator.getUnsafe();
+                Class<?> k = TreeBin.class;
+                LOCKSTATE = U.objectFieldOffset(k.getDeclaredField("lockState"));
+            } catch (Exception e) {
+                throw new Error(e);
+            }
+        }
 
         TreeBin(TreeNode<K, V> b) {
             super(TREEBIN, null, null, null);
             //todo
+        }
+
+        private final void lockRoot() {
+            if (!U.compareAndSwapInt(this, LOCKSTATE, 0, WAITER)) {
+                contentedLock();
+            }
+        }
+
+        final TreeNode<K, V> putTreeVal(int h, K k, V v) {
+            Class<?> kc = null;
+            boolean searched = false;
+            for (TreeNode<K, V> p = root; ; ) {
+                int dir, ph;
+                K pk;
+                if (p == null) {
+                    first = root = new TreeNode<K, V>(h, k, v, null, null);
+                    break;
+                } else if ((ph = p.hash) > h) {
+                    dir = -1;
+                } else if (ph < h) {
+                    dir = 1;
+                } else if ((pk = p.key) == k || (pk != null && k.equals(pk))) {
+                    return p;
+                    //todo
+                    //理解这段
+                } else if ((kc == null && (kc = comparableClassFor(k)) == null) ||
+                        (dir = compareComparables(kc, k, pk)) == 0) {
+                    if (!searched) {
+                        TreeNode<K, V> q, ch;
+                        searched = true;
+                        if (((ch = p.left) != null && (q = ch.findTreeNode(h, k, kc)) != null) ||
+                                ((ch = p.right) != null && (q = ch.findTreeNode(h, k, kc)) != null)) {
+                            return q;
+                        }
+                    }
+                    dir = tieBreakOrder(k, pk);
+                }
+                TreeNode<K, V> xp = p;
+                if ((p = (dir <= 0) ? p.left : p.right) == null) {
+                    TreeNode<K, V> x, f = first;
+                    first = x = new TreeNode<K, V>(h, k, v, f, xp);
+                    if (f != null) {
+                        f.prev = x;
+                    }
+                    if (dir <= 0) {
+                        xp.left = x;
+                    } else {
+                        xp.right = x;
+                    }
+                    if (!xp.red) {
+                        x.red = true;
+                    } else {
+                        lockRoot();
+                        try {
+                            root = balanceInsertion(root, x);
+                        } finally {
+                            unlockRoot();
+                        }
+                    }
+                    break;
+                }
+            }
+            return null;
+        }
+
+        private final void unlockRoot() {
+            lockState = 0;
         }
     }
 
