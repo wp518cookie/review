@@ -4,6 +4,8 @@ import blog.java.unsafe.UnsafeGenerator;
 import sun.misc.Unsafe;
 
 import java.io.ObjectStreamField;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -124,6 +126,27 @@ public class MyConcurrentHashMap1_8<K, V> {
                 s = sumCount();
             }
         }
+    }
+
+    static Class<?> comparableClassFor(Object x) {
+        if (x instanceof Comparable) {
+            Class<?> c; Type[] ts, as; Type t;
+            ParameterizedType p;
+            if ((c = x.getClass()) == String.class) {
+                return c;
+            }
+            if ((ts = c.getGenericInterfaces()) != null) {
+                for (int i = 0; i < ts.length; ++i) {
+                    if (((t = ts[i]) instanceof ParameterizedType) &&
+                            ((p = (ParameterizedType) t).getRawType() == Comparable.class) &&
+                            (as = p.getActualTypeArguments()) != null &&
+                            as.length == 1 && as[0] == c) {
+                        return c;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     //todo
@@ -580,7 +603,45 @@ public class MyConcurrentHashMap1_8<K, V> {
 
         TreeBin(TreeNode<K, V> b) {
             super(TREEBIN, null, null, null);
-            //todo
+            this.first = b;
+            TreeNode<K, V> r = null;
+            for (TreeNode<K, V> x = b, next; x != null; x = next) {
+                next = (TreeNode<K, V>) x.next;
+                x.left = x.right = null;
+                if (r == null) {
+                    x.parent = null;
+                    x.red = false;
+                    r = x;
+                } else {
+                    K k = x.key;
+                    int h = x.hash;
+                    Class<?> kc = null;
+                    for (TreeNode<K, V> p = r; ; ) {
+                        int dir, ph;
+                        K pk = p.key;
+                        if ((ph = p.hash) > h) {
+                            dir = -1;
+                        } else if (ph < h) {
+                            dir = 1;
+                        } else if ((kc == null && (kc = comparableClassFor(k)) == null) ||
+                                (dir = compareComparables(kc, k, pk)) == 0) {
+                            dir = tieBreakOrder(k, pk);
+                        }
+                        TreeNode<K, V> xp = p;
+                        if ((p = (dir <= 0) ? p.left : p.right) == null) {
+                            x.parent = xp;
+                            if (dir <= 0) {
+                                xp.left = x;
+                            } else {
+                                xp.right = x;
+                            }
+                            r = balanceInsertion(r, x);
+                            break;
+                        }
+                    }
+                }
+            }
+            this.root = r;
         }
 
         private final void lockRoot() {
