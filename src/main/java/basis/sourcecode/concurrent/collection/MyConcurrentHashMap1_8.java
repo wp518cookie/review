@@ -37,7 +37,7 @@ public class MyConcurrentHashMap1_8<K, V> {
     private static final int MIN_TRANSFER_STRIDE = 16;
     private static int RESIZE_STAMP_BITS = 16;
     private static final int MAX_RESIZERS = (1 << (32 - RESIZE_STAMP_BITS)) - 1;
-    private static final int RESIZE_STAMP_SHIFT = 32 - RESIZE_STAMP_BITS;
+    private static int RESIZE_STAMP_SHIFT = 32 - RESIZE_STAMP_BITS;
     static final int MOVED = -1; // hash for forwarding nodes
     static final int TREEBIN = -2; // hash for roots of trees
     static final int RESERVED = -3; // hash for transient reservations
@@ -90,9 +90,12 @@ public class MyConcurrentHashMap1_8<K, V> {
     }
 
     private final void addCount(long x, int check) {
-        CounterCell[] as; long b, s;
+        CounterCell[] as;
+        long b, s;
         if ((as = counterCells) != null || !U.compareAndSwapLong(this, BASECOUNT, b = baseCount, s = b + x)) {
-            CounterCell a; long v; int m;
+            CounterCell a;
+            long v;
+            int m;
             boolean uncontended = true;
             //todo
             //解决
@@ -108,8 +111,9 @@ public class MyConcurrentHashMap1_8<K, V> {
             s = sumCount();
         }
         if (check >= 0) {
-            Node<K, V>[] tab, nt; int n, sc;
-            while (s >= (long)(sc = sizeCtl) && (tab = table) != null &&
+            Node<K, V>[] tab, nt;
+            int n, sc;
+            while (s >= (long) (sc = sizeCtl) && (tab = table) != null &&
                     (n = tab.length) < MAXIMUM_CAPACITY) {
                 int rs = resizeStamp(n);
                 if (sc < 0) {
@@ -131,7 +135,9 @@ public class MyConcurrentHashMap1_8<K, V> {
 
     static Class<?> comparableClassFor(Object x) {
         if (x instanceof Comparable) {
-            Class<?> c; Type[] ts, as; Type t;
+            Class<?> c;
+            Type[] ts, as;
+            Type t;
             ParameterizedType p;
             if ((c = x.getClass()) == String.class) {
                 return c;
@@ -158,9 +164,12 @@ public class MyConcurrentHashMap1_8<K, V> {
 //      }
         boolean collide = false;
         for (; ; ) {
-            CounterCell[] as; CounterCell a; int n; long v;
+            CounterCell[] as;
+            CounterCell a;
+            int n;
+            long v;
             if ((as = counterCells) != null && (n = as.length) > 0) {
-                if ((a = as [(n - 1) & h]) == null) {
+                if ((a = as[(n - 1) & h]) == null) {
                     if (cellsBusy == 0) {
                         CounterCell r = new CounterCell(x);
                         if (cellsBusy == 0 && U.compareAndSwapInt(this, CELLSBUSY, 0, 1)) {
@@ -223,6 +232,26 @@ public class MyConcurrentHashMap1_8<K, V> {
                 break;
             }
         }
+    }
+
+    public V get(Object key) {
+        Node<K, V>[] tab; Node<K, V> e, p; int n, eh; K ek;
+        int h = spread(key.hashCode());
+        if ((tab = table) != null && (n = tab.length) > 0 && (e = tabAt(tab, h & (n - 1))) != null) {
+            if ((eh = e.hash) == h) {
+                if ((ek = e.key) == key || (ek != null && key.equals(ek))) {
+                    return e.val;
+                }
+            } else if (eh < 0) {
+                return (p = e.find(h, key)) != null ? p.val : null;
+            }
+            while ((e = e.next) != null) {
+                if (e.hash == h && ((ek = e.key) == key || (ek != null && key.equals(ek)))) {
+                    return e.val;
+                }
+            }
+        }
+        return null;
     }
 
     //todo
@@ -342,6 +371,76 @@ public class MyConcurrentHashMap1_8<K, V> {
         return null;
     }
 
+    public V remove(Object key) {
+        return replaceNode(key, null, null);
+    }
+
+    final V replaceNode(Object key, V value, Object cv) {
+        int hash = spread(key.hashCode());
+        for (Node<K, V>[] tab = table; ; ) {
+            Node<K, V> f; int n, i, fh;
+            if (tab == null || (n = tab.length) == 0 || (f = tab[hash & (i = (n - 1))]) == null) {
+                break;
+            } else if ((fh = f.hash) == MOVED) {
+                tab = helpTransfer(tab, f);
+            } else {
+                V oldVal = null;
+                boolean validated = false;
+                synchronized (f) {
+                    if (tabAt(tab, i) == f) {
+                        if (fh >= 0) {
+                            validated = true;
+                            for (Node<K, V> e = f, pred = null; ; ) {
+                                K ek;
+                                if (e.hash == hash && ((ek = e.key) == key ||
+                                        (ek != null && key.equals(ek)))) {
+                                    V ev = e.val;
+                                    if (cv == null || cv == ev ||
+                                            (ev != null && cv.equals(ev))) {
+                                        oldVal = ev;
+                                        if (value != null) {
+                                            e.val = value;
+                                        } else if (pred != null) {
+                                            pred.next = e.next;
+                                        } else {
+                                            setTabAt(tab, i, e.next);
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        } else if (f instanceof TreeBin) {
+                            validated = true;
+                            TreeBin<K, V> t = (TreeBin<K, V>) f;
+                            TreeNode<K, V> r, p;
+                            if ((r = t.root) != null && (p = r.findTreeNode(hash, key, null)) != null) {
+                                V pv = p.val;
+                                if (cv == null || cv == pv || cv.equals(pv)) {
+                                    oldVal = pv;
+                                    if (value != null) {
+                                        p.val = value;
+                                    } else if (t.removeTreeNode(p)) {
+                                        setTabAt(tab, i, untreeify(t.first));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (validated) {
+                    if (oldVal != null) {
+                        if (value == null) {
+                            addCount(-1L, -1);
+                        }
+                        return oldVal;
+                    }
+                    break;
+                }
+            }
+        }
+        return null;
+    }
+
     static final int resizeStamp(int n) {
         return Integer.numberOfLeadingZeros(n) | (1 << (RESIZE_STAMP_BITS - 1));
     }
@@ -350,8 +449,27 @@ public class MyConcurrentHashMap1_8<K, V> {
         U.putObjectVolatile(tab, ((long) i << ASHIFT) + ABASE, v);
     }
 
+    public int size() {
+        long n = sumCount();
+        return ((n < 0L) ? 0 : (n > (long) Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) n);
+    }
+
     static final int spread(int h) {
         return (h ^ (h >>> 16)) & HASH_BITS;
+    }
+
+    final long sumCount() {
+        CounterCell[] as = counterCells;
+        CounterCell a;
+        long sum = baseCount;
+        if (as != null) {
+            for (int i = 0; i < as.length; i++) {
+                if ((a = as[i]) != null) {
+                    sum += a.value;
+                }
+            }
+        }
+        return sum;
     }
 
     private Node<K, V> tabAt(Node<K, V>[] tab, int index) {
@@ -501,7 +619,8 @@ public class MyConcurrentHashMap1_8<K, V> {
     }
 
     private final void treeifyBin(Node<K, V>[] tab, int index) {
-        Node<K, V> b; int n, sc;
+        Node<K, V> b;
+        int n, sc;
         if (tab != null) {
             if ((n = tab.length) < MIN_TREEIFY_CAPACITY) {
                 tryPresize(n << 1);
@@ -531,7 +650,8 @@ public class MyConcurrentHashMap1_8<K, V> {
         int c = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY : tableSizeFor(size + (size >>> 1) + 1);
         int sc;
         while ((sc = sizeCtl) >= 0) {
-            Node<K, V>[] tab = table; int n;
+            Node<K, V>[] tab = table;
+            int n;
             if (tab == null || (n = tab.length) == 0) {
                 n = (sc > c) ? sc : c;
                 if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
@@ -669,6 +789,7 @@ public class MyConcurrentHashMap1_8<K, V> {
         static final int READER = 4;
         private static final Unsafe U;
         private static final long LOCKSTATE;
+
         static {
             try {
                 U = UnsafeGenerator.getUnsafe();
