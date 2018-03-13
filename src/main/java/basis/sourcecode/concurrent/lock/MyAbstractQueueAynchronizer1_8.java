@@ -3,7 +3,9 @@ package basis.sourcecode.concurrent.lock;
 import sun.misc.Unsafe;
 import util.UnsafeGenerator;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractOwnableSynchronizer;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -15,6 +17,143 @@ public class MyAbstractQueueAynchronizer1_8 extends AbstractOwnableSynchronizer 
     private transient volatile Node tail;
     private volatile int state;
     //-------------------------------inner Class-----------------------------
+    public class ConditionObject  {
+        private transient Node firstWaiter;
+        private transient Node lastWaiter;
+        private static final int REINTERRUPT = 1;
+        private static final int THROW_IE = -1;
+
+        public ConditionObject() {
+
+        }
+
+        private Node addConditionWaiter() {
+            Node t = lastWaiter;
+            if (t != null && t.waitStatus != Node.CONDITION) {
+                unlinkCancelledWaiters();
+                t = lastWaiter;
+            }
+            Node node = new Node(Thread.currentThread(), Node.CONDITION);
+            if (t == null) {
+                firstWaiter = node;
+            } else {
+                t.nextWaiter = node;
+            }
+            lastWaiter = node;
+            return node;
+        }
+
+        public final void await() throws InterruptedException {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            Node node = addConditionWaiter();
+            int savedState = fullyRelease(node);
+            int interruptMode = 0;
+            while (!isOnSyncQueue(node)) {
+                LockSupport.park(this);
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {
+                    break;
+                }
+            }
+            if (acquireQueued(node, savedState) && interruptMode != THROW_IE) {
+                interruptMode = REINTERRUPT;
+            }
+            if (node.nextWaiter != null) {
+                unlinkCancelledWaiters();
+            }
+            if (interruptMode != 0) {
+                reportInterruptAfterWait(interruptMode);
+            }
+        }
+
+        public final long awaitNanos(long nanosTimeout) throws InterruptedException {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            Node node = addConditionWaiter();
+            int savedState = fullyRelease(node);
+            final long deadline = System.nanoTime() + nanosTimeout;
+            int interruptMode = 0;
+            while (!isOnSyncQueue(node)) {
+                if (nanosTimeout <= 0L) {
+                    transferAfterCancelledWait(node);
+                    break;
+                }
+                if (nanosTimeout >= spinForTimeoutThreshold) {
+                    LockSupport.parkNanos(this, nanosTimeout);
+                }
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {
+                    break;
+                }
+                nanosTimeout = deadline - System.nanoTime();
+            }
+            if (acquireQueued(node, savedState) && interruptMode != THROW_IE) {
+                interruptMode = REINTERRUPT;
+            }
+            if (node.nextWaiter != null) {
+                unlinkCancelledWaiters();
+            }
+            if (interruptMode != 0) {
+                reportInterruptAfterWait(interruptMode);
+            }
+            return deadline - System.nanoTime();
+        }
+
+        private int checkInterruptWhileWaiting(Node node) {
+            return Thread.interrupted() ? (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) : 0;
+        }
+
+        private void doSignal(Node first) {
+            do {
+                if ((firstWaiter = first.nextWaiter) == null) {
+                    lastWaiter = null;
+                }
+                first.nextWaiter = null;
+            } while (!transferForSignal(first) && (first = firstWaiter) != null);
+        }
+
+        private void reportInterruptAfterWait(int interruptMode) throws InterruptedException {
+            if (interruptMode == THROW_IE) {
+                throw new InterruptedException();
+            } else if (interruptMode == REINTERRUPT) {
+                selfInterrupt();
+            }
+        }
+
+        public final void signal() {
+            if (!isHeldExclusively()) {
+                throw new IllegalMonitorStateException();
+            }
+            Node first = firstWaiter;
+            if (first != null) {
+                doSignal(first);
+            }
+        }
+
+        private void unlinkCancelledWaiters() {
+            Node t = firstWaiter;
+            Node trail = null;
+            while (t != null) {
+                Node next = t.nextWaiter;
+                if (t.waitStatus != Node.CONDITION) {
+                    t.nextWaiter = null;
+                    if (trail == null) {
+                        firstWaiter = next;
+                    } else {
+                        trail.nextWaiter = next;
+                    }
+                    if (next == null) {
+                        lastWaiter = trail;
+                    }
+                } else {
+                    trail = t;
+                }
+                t = next;
+            }
+        }
+    }
+
     static final class Node {
         static final Node SHARED = new Node();
         static final Node EXCLUSIVE = null;
@@ -249,6 +388,26 @@ public class MyAbstractQueueAynchronizer1_8 extends AbstractOwnableSynchronizer 
         }
     }
 
+    private void doReleaseShared() {
+        for (; ; ) {
+            Node h = head;
+            if (h != null && h != tail) {
+                int ws = h.waitStatus;
+                if (ws == Node.SIGNAL) {
+                    if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0)) {
+                        continue;
+                    }
+                    unparkSuccessor(h);
+                } else if (ws == 0 && !compareAndSetWaitStatus(h, 0, Node.PROPAGATE)) {
+                    continue;
+                }
+            }
+            if (h == head) {
+                break;
+            }
+        }
+    }
+
     private Node enq(final Node node) {
         for (; ; ) {
             Node t = tail;
@@ -264,6 +423,46 @@ public class MyAbstractQueueAynchronizer1_8 extends AbstractOwnableSynchronizer 
                 }
             }
         }
+    }
+
+    private boolean findNodeFromTail(Node node) {
+        Node t = tail;
+        for (; ; ) {
+            if (t == node) {
+                return true;
+            }
+            if (t == null) {
+                return false;
+            }
+            t = t.prev;
+        }
+    }
+
+    final int fullyRelease(Node node) {
+        boolean failed = true;
+        try {
+            int savedState = getState();
+            if (release(savedState)) {
+                failed = false;
+                return savedState;
+            } else {
+                throw new IllegalArgumentException();
+            }
+        } finally {
+            if (failed) {
+                node.waitStatus = Node.CANCELLED;
+            }
+        }
+    }
+
+    final boolean isOnSyncQueue(Node node) {
+        if (node.waitStatus == Node.CONDITION || node.prev == null) {
+            return false;
+        }
+        if (node.next != null) {
+            return true;
+        }
+        return findNodeFromTail(node);
     }
 
     private final boolean parkAndCheckInterrupt() {
@@ -282,6 +481,14 @@ public class MyAbstractQueueAynchronizer1_8 extends AbstractOwnableSynchronizer 
         return false;
     }
 
+    public final boolean releaseShared(int arg) {
+        if (tryReleaseShared(arg)) {
+            doReleaseShared();
+            return true;
+        }
+        return false;
+    }
+
     static void selfInterrupt() {
         Thread.currentThread().interrupt();
     }
@@ -290,6 +497,18 @@ public class MyAbstractQueueAynchronizer1_8 extends AbstractOwnableSynchronizer 
         head = node;
         node.thread = null;
         node.prev = null;
+    }
+
+    private void setHeadAndPropagate(Node node, int propagate) {
+        Node h = head;
+        setHead(node);
+        if (propagate > 0 || h == null || h.waitStatus < 0 ||
+                (h = head) == null || h.waitStatus < 0) {
+            Node s = node.next;
+            if (s == null || s.isShared()) {
+                doReleaseShared();
+            }
+        }
     }
 
     private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
@@ -306,6 +525,30 @@ public class MyAbstractQueueAynchronizer1_8 extends AbstractOwnableSynchronizer 
             compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
         }
         return false;
+    }
+
+    final boolean transferAfterCancelledWait(Node node) {
+        if (compareAndSetWaitStatus(node, Node.CONDITION, 0)) {
+            enq(node);
+            return true;
+        }
+        while (!isOnSyncQueue(node)) {
+            Thread.yield();
+        }
+        return false;
+    }
+
+    final boolean transferForSignal(Node node) {
+        if (!compareAndSetWaitStatus(node, node.CONDITION, 0)) {
+            return false;
+        }
+        Node p = enq(node);
+        int ws = p.waitStatus;
+        //todo
+        if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL)) {
+            LockSupport.unpark(node.thread);
+        }
+        return true;
     }
 
     public final boolean tryAcquireNanos(int arg, long nanosTimeout) throws InterruptedException {
