@@ -20,6 +20,9 @@ public class MyTreeGen {
 
     public boolean delete(float indexNo) {
         INode currentNode = search(indexNo);
+        if (currentNode == null) {
+            return false;
+        }
         //todo
     }
 
@@ -206,9 +209,26 @@ public class MyTreeGen {
         return null;
     }
 
-    private INode search(float indexNo) {
-        if (_rootNode.isLeaf == true) {
-            
+    private void recursion_to_search(INode currentNode, float indexNo) {
+        if (currentNode == null) {
+            return;
         }
+        if (currentNode.isLeaf == false && currentNode.childNodes.size() > 0) {
+            int cindex = 0;
+            int indexL = -1;
+            for (float key : currentNode.keys) {
+                if (indexNo >= key) {
+                    indexL = cindex;
+                } else {
+
+                }
+            }
+        }
+    }
+
+    private INode search(float indexNo) {
+        _research_result = null;
+        recursion_to_search(_rootNode, indexNo);
+        return _research_result;
     }
 }
