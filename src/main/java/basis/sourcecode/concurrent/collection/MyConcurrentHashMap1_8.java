@@ -1,3 +1,4 @@
+/*
 package basis.sourcecode.concurrent.collection;
 
 import blog.java.unsafe.UnsafeGenerator;
@@ -10,9 +11,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+*/
 /**
  * Created by ping.wu on 2018/3/3.
- */
+ *//*
+
 public class MyConcurrentHashMap1_8<K, V> {
     //----------------------------field ----------------------------------------------
     transient volatile Node<K, V>[] table;
@@ -928,10 +931,12 @@ public class MyConcurrentHashMap1_8<K, V> {
             return findTreeNode(h, k, null);
         }
 
-        /**
+        */
+/**
          * Returns the TreeNode (or null if not found) for the given key
          * starting at given root.
-         */
+         *//*
+
         final TreeNode<K, V> findTreeNode(int h, Object k, Class<?> kc) {
             if (k != null) {
                 TreeNode<K, V> p = this;
@@ -964,3 +969,4 @@ public class MyConcurrentHashMap1_8<K, V> {
         }
     }
 }
+*/
