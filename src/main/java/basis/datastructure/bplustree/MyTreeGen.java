@@ -20,7 +20,11 @@ public class MyTreeGen {
 
     public boolean delete(float indexNo) {
         INode currentNode = search(indexNo);
+        if (currentNode == null) {
+            return false;
+        }
         //todo
+        return false;
     }
 
     public boolean insert(float indexNo, String value) {
@@ -77,6 +81,7 @@ public class MyTreeGen {
             }
             recurse_division_after_insert(theLeaf);
         }
+        return true;
     }
 
     private void recurse_changeMinimum(INode node, float indexNo) {
@@ -206,9 +211,44 @@ public class MyTreeGen {
         return null;
     }
 
-    private INode search(float indexNo) {
-        if (_rootNode.isLeaf == true) {
-            
+    private void recursion_to_search(INode currentNode, float indexNo) {
+        if (currentNode == null) {
+            return;
         }
+        if (currentNode.isLeaf == false && currentNode.childNodes.size() > 0) {
+            int cindex = 0;
+            int indexL = -1;
+            for (float key : currentNode.keys) {
+                if (indexNo >= key) {
+                    indexL = cindex;
+                } else {
+                    break;
+                }
+                cindex++;
+            }
+            if (indexL == -1) {
+                return;
+            } else {
+                recursion_to_search(currentNode.childNodes.get(indexL), indexNo);
+                return;
+            }
+        } else {
+            int indexL = -1;
+            int cindex = 0;
+            for (float key : currentNode.keys) {
+                if (key == indexNo) {
+                    indexL = cindex;
+                    _research_result = currentNode;
+                    break;
+                }
+                cindex++;
+            }
+        }
+    }
+
+    private INode search(float indexNo) {
+        _research_result = null;
+        recursion_to_search(_rootNode, indexNo);
+        return _research_result;
     }
 }
