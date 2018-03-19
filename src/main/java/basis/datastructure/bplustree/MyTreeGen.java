@@ -24,6 +24,7 @@ public class MyTreeGen {
             return false;
         }
         //todo
+        return false;
     }
 
     public boolean insert(float indexNo, String value) {
@@ -80,6 +81,7 @@ public class MyTreeGen {
             }
             recurse_division_after_insert(theLeaf);
         }
+        return true;
     }
 
     private void recurse_changeMinimum(INode node, float indexNo) {
