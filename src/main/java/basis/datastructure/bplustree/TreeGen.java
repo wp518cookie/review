@@ -131,8 +131,6 @@ public class TreeGen {
     public INode search(float indexNO) {
         _research_result = null;
         recursion_to_serach(_rootNode, indexNO);
-
-
         return _research_result;
     }
 

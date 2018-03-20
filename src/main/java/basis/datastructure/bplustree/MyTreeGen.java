@@ -23,8 +23,68 @@ public class MyTreeGen {
         if (currentNode == null) {
             return false;
         }
-        //todo
+        if (currentNode.parent == null && currentNode.childNodes.size() <= 0) {
+
+            int indexL = getIndexLocation(currentNode, indexNo);
+            if (indexL == -1) {
+                return false;
+            } else {
+                currentNode.keys.remove(indexL);
+                ((TreeLeaf) currentNode).values.remove(indexL);
+                return true;
+            }
+        } else if (currentNode.isLeaf == false) {
+            return false;
+        } else if (currentNode.isLeaf == true) {
+            if (currentNode.keys.size() > _min) {
+                int indexL = getIndexLocation(currentNode, indexNo);
+                if (indexL == -1) {
+                    return false;
+                } else if (indexL == 0) {
+                    currentNode.keys.remove(indexL);
+                    recursion_handler_firstOneDelete(null, currentNode, 0.0f);
+                    return true;
+                } else {
+                    currentNode.keys.remove(indexL);
+                    ((TreeLeaf) currentNode).values.remove(indexL);
+                    return true;
+                }
+            } else {
+                INode parentNode = currentNode.parent;
+                int indexL = getIndexLocation(currentNode, indexNo);
+                int cNodePindex = parentNode.childNodes.indexOf(currentNode);
+                if (cNodePindex == -1) {
+                    return false;
+                }
+                INode leftBrother = null;
+                INode rightBrother = ((TreeLeaf) currentNode).rightBrother;
+                if (cNodePindex > 0) {
+                    leftBrother = parentNode.childNodes.get(cNodePindex - 1);
+                }
+                if (leftBrother != null && leftBrother.keys.size() > _min) {
+
+                }
+            }
+        }
         return false;
+    }
+
+    private int getIndexLocation(INode currentNode, float indexNo) {
+        int cindex = 0;
+        if (currentNode == null || currentNode.keys.size() <= 0) {
+            return -1;
+        } else {
+            for (float key : currentNode.keys) {
+                if (key > indexNo) {
+                    break;
+                } else if (key == indexNo) {
+                    return cindex;
+                } else {
+                    cindex++;
+                }
+            }
+        }
+        return -1;
     }
 
     public boolean insert(float indexNo, String value) {
@@ -209,6 +269,10 @@ public class MyTreeGen {
             }
         }
         return null;
+    }
+
+    private void recursion_handler_firstOneDelete(INode childNode, INode currentNode, float firstIndex) {
+        //todo
     }
 
     private void recursion_to_search(INode currentNode, float indexNo) {
