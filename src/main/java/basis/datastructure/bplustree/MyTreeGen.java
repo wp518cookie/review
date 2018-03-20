@@ -222,8 +222,26 @@ public class MyTreeGen {
                 if (indexNo >= key) {
                     indexL = cindex;
                 } else {
-
+                    break;
                 }
+                cindex++;
+            }
+            if (indexL == -1) {
+                return;
+            } else {
+                recursion_to_search(currentNode.childNodes.get(indexL), indexNo);
+                return;
+            }
+        } else {
+            int indexL = -1;
+            int cindex = 0;
+            for (float key : currentNode.keys) {
+                if (key == indexNo) {
+                    indexL = cindex;
+                    _research_result = currentNode;
+                    break;
+                }
+                cindex++;
             }
         }
     }
