@@ -1,0 +1,304 @@
+一、数据结构
+B树
+B+树
+红黑树
+AVL树
+R树
+相关书籍：剑指offer、面试金典
+
+二、算法
+1、详见：https://segmentfault.com/a/1190000013695159
+一般背包问题
+最佳合并模式
+最小代价生成树
+迪杰斯特拉算法
+佛洛依德算法
+最长公共子序列
+0/1背包问题
+多段图问题
+n皇后问题
+BFS
+DFS
+2、gitbook
+https://hk029.gitbooks.io/leetbook/
+3、常见算法
+各种排序算法时间复杂度
+深度优先搜索
+广度优先搜索
+全排列
+贪心算法
+KMP算法
+Hash算法
+海量数据处理
+
+三、操作系统
+操作系统的四个特性。
+操作系统的主要功能。
+进程的有哪几种状态，状态转换图，及导致转换的事件。
+进程与线程的区别。
+进程通信的几种方式。
+进程同步的几种方式
+用户态和核心态的区别。
+死锁的概念，导致死锁的原因。
+导致死锁的四个必要条件。
+处理死锁的四个方式。
+预防死锁的方法、避免死锁的方法。
+进程调度算法。
+内存连续分配方式采用的几种算法及各自优劣。
+基本分页储存管理方式。
+基本分段储存管理方式。
+分段分页方式的比较各自优缺点。
+几种页面置换算法，会算所需换页数
+虚拟内存的定义及实现方式。
+Linux的常用命令
+缓冲区溢出
+虚拟内存与主存
+相关书籍：现代操作系统
+
+四、计算机网络
+OSI七层模型
+传输层的作用
+传输层复用和分用的含义
+传输层和网络层的区别
+UDP协议的特点
+UDP协议的报文结构
+TCP协议的特点
+TCP协议的报文结构
+TCP三次握手过程
+TCP四次挥手过程
+TCP可靠传输是如何实现的
+停止等待协议
+滑动窗口协议
+TCP的流量控制
+TCP拥塞控制
+Tcp粘包与拆包
+HTTP协议
+    HTTP工作流程
+    HTTP请求格式
+    HTTP 1.1中的8种请求方式
+    HTTP响应格式
+    HTTP中重要的请求头和响应头字段
+    HTTP常用状态码及其含义
+    http/1.0 http/1.1 http/2之前的区别
+HTTPS协议
+    HTTPS协议与HTTP协议的区别
+    HTTPS协议的工作流程
+Java RMI，Socket，HttpClient
+cookie与session
+cookie被禁用，如何实现session
+了解nginx和apache服务器的特性并搭建一个对应的服务器
+用Java实现FTP、SMTP协议
+进程间通讯的方式
+什么是CDN？如果实现？
+什么是DNS？
+反向代理
+相关书籍：tcp/ip详解、http权威指南
+
+五、数据库
+什么是索引？
+索引的分类
+索引的优缺点分析
+何时需要使用索引？何时无需使用索引？
+什么是事务？
+事务的隔离级别、事务能不能实现锁的功能
+事务的四大特性
+数据库三大范式
+数据库有哪些表连接？
+MySql 执行引擎
+MySQL 执行计划
+SQL优化
+数据库锁：行锁、表锁、使用数据库锁实现乐观锁
+常用的nosql数据库：redis、memcached
+分别使用数据库锁、NoSql实现分布式锁
+相关书籍：innodb技术内幕、高性能mysql
+
+六、JVM
+Java虚拟机内存模型特点和作用
+程序计数器
+Java虚拟机栈
+本地方法区
+堆
+方法区
+对象创建过程
+对象访问过程
+对象的内存结构
+垃圾收集算法
+如何判定哪些对象需要回收？
+对象内存分配策略
+分配担保机制
+垃圾收集器的比较
+Class文件结构
+类加载的时机
+类加载过程
+双亲委派模型
+JVM参数调优
+Java对象模型 oop-klass、对象头
+Hotspot的即时编译器及优化
+模块化(jboss modules、osgi、jigsaw)
+虚拟机性能监控及故障处理jps, jstack, jmap、jstat, jconsole, jinfo, jhat, javap, btrace、TProfiler
+Java中语法糖原理、解语法糖
+CPU缓存，L1，L2，L3和伪共享
+尾递归
+位运算：用位运算实现加、减、乘、除、取余
+词法分析，语法分析（LL算法，递归下降算法，LR算法），语义分析，运行时环境，中间代码，代码生成，代码优化
+
+七、java相关
+1、并发
+什么是死锁？如何避免死锁？
+什么是重排序？
+volatile有哪些特性？
+什么是内存可见性？
+volatile为什么能够保证内存可见性？
+中断机制
+线程通信有哪些方式？
+线程池的作用？
+ThreadPoolExecutor如何使用？
+如何设置线程池的大小？
+如何保证线程安全？
+JDK 1.6哪些对锁做了哪些优化？
+final加强语义
+Thread
+Runnable
+Callable
+ReentrantLock
+ReentrantReadWriteLock
+Atomic*
+Semaphore
+CountDownLatch
+ConcurrentHashMap
+Executors
+线程安全：死锁、死锁如何排查、Java线程调度、线程安全和内存模型的关系
+锁：
+CAS、乐观锁与悲观锁、数据库相关锁机制、分布式锁、偏向锁、轻量级锁、重量级锁、monitor、锁优化、锁消除、锁粗化、自旋锁、可重入锁、阻塞锁、死锁
+写一个死锁的程序
+写代码来解决生产者消费者问题
+守护线程
+守护线程和非守护线程的区别以及用法
+
+2、容器
+Collection架构
+ArrayList
+LinkedList
+ArrayList&LinkedList总结
+fail-fast
+Map架构
+HashMap
+HashTable
+TreeMap
+WeakHashMap
+HashMap&HashTable&TreeMap&WeakHashMap总结
+Set架构
+HashSet
+TreeSet
+Iterator和Enumeration比较
+3、IO&NIO
+序列化(Serialzable&Externalizable)
+bio、nio和aio的区别、三种IO的用法与原理、netty
+4、其他
+String
+JDK 6和JDK 7中substring的原理及区别
+replaceFirst、replaceAll、replace区别
+String对“+”的重载
+String.valueOf和Integer.toString的区别
+字符串的不可变性
+Integer
+Integer的缓存机制
+自动拆装箱
+Long
+Enum
+BigDecimal
+ThreadLocal
+ClassLoader & URLClassLoader
+ArrayList & LinkedList
+HashMap & LinkedHashMap & TreeMap & CouncurrentHashMap
+HashSet & LinkedHashSet & TreeSet
+熟悉Java中各种关键字：transient、instanceof、volatile、synchronized、final、static、const 原理及用法。
+5、序列化
+什么是序列化与反序列化、为什么序列化
+序列化底层原理
+序列化与单例模式
+protobuf
+为什么说序列化并不安全
+6、JMS
+什么是Java消息服务
+JMS消息传送模型
+JMX：java.lang.management.*、 javax.management.*
+
+八、其他
+1、设计模式
+会使用常用设计模式
+单例、策略、工厂、适配器、责任链。
+相关书籍：head frist设计模式
+实现AOP
+实现IOC
+不用synchronized和lock，实现线程安全的单例模式
+nio和reactor设计模式
+2、spring相关
+Servlet线程安全问题
+Servlet中的filter和listener
+Hibernate的缓存机制
+Hiberate的懒加载
+Spring Bean的初始化
+Spring的AOP原理
+自己实现Spring的IOC
+Spring MVC
+Spring Boot2.0
+Spring Boot的starter原理，自己实现一个starter
+Spring Security
+mybatis映射实现
+3、实际场景
+性能优化：
+使用单例、使用Future模式、使用线程池、选择就绪、减少上下文切换、减少锁粒度、数据压缩、结果缓存
+线上问题分析：
+dump获取
+线程Dump、内存Dump、gc情况
+dump分析
+分析死锁、分析内存泄露
+自己编写各种outofmemory，stackoverflow程序
+HeapOutOfMemory、 Young OutOfMemory、MethodArea OutOfMemory、ConstantPool OutOfMemory、DirectMemory OutOfMemory、Stack OutOfMemory Stack OverFlow
+常见问题解决思路
+内存溢出、线程死锁、类加载冲突
+使用工具尝试解决以下问题，并写下总结
+当一个Java程序响应很慢时如何查找问题、
+当一个Java程序频繁FullGC时如何解决问题、
+如何查看垃圾回收日志、
+当一个Java应用发生OutOfMemory时该如何解决、
+如何判断是否出现死锁、
+如何判断是否存在内存泄露
+4、网络安全相关
+什么是XSS
+XSS的防御
+什么是CSRF
+什么是注入攻击
+SQL注入、XML注入、CRLF注入
+什么是文件上传漏洞
+加密与解密
+MD5，SHA1、DES、AES、RSA、DSA
+什么是DOS攻击和DDOS攻击
+memcached为什么可以导致DDos攻击、什么是反射型DDoS
+SSL、TLS，HTTPS
+如何通过Hash碰撞进行DOS攻击
+用openssl签一个证书部署到apache或nginx
+5、架构&分布式
+数据一致性、服务治理、服务降级
+分布式事务
+2PC、3PC、CAP、BASE、 可靠消息最终一致性、最大努力通知、TCC
+Dubbo
+服务注册、服务发现，服务治理
+分布式数据库
+怎样打造一个分布式数据库、什么时候需要分布式数据库、mycat、otter、HBase
+分布式文件系统
+mfs、fastdfs
+分布式缓存
+缓存一致性、缓存命中率、缓存冗余
+微服务
+SOA、康威定律
+ServiceMesh
+Docker & Kubernets
+Spring Boot
+Spring Cloud
+6、高并发场景
+分库分表
+CDN技术
+消息队列
+ActiveMQ
