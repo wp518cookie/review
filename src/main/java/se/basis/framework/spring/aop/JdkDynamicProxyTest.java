@@ -13,14 +13,14 @@ import java.lang.reflect.Proxy;
 public class JdkDynamicProxyTest {
     public static void main(String[] args) throws Exception {
         RealSubject subject = new RealSubject();
-        Subject1 subjectProxy = (Subject1) Proxy.newProxyInstance(subject.getClass().getClassLoader(), subject.getClass().getInterfaces(), new SubjectProxy(subject));
-        subjectProxy.doSomething1();
+        Subject subjectProxy = (Subject) Proxy.newProxyInstance(subject.getClass().getClassLoader(), subject.getClass().getInterfaces(), new SubjectProxy(subject));
+        subjectProxy.doSomething();
         createProxyClassFile();
     }
 
     private static void createProxyClassFile() {
         String name = "ProxySubject";
-        byte[] data = ProxyGenerator.generateProxyClass(name,new Class[]{Subject1.class});
+        byte[] data = ProxyGenerator.generateProxyClass(name,new Class[]{Subject1.class, Subject.class});
         FileOutputStream out =null;
         try {
             out = new FileOutputStream(name+".class");

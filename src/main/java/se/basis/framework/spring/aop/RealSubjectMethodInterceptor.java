@@ -19,7 +19,6 @@ public class RealSubjectMethodInterceptor implements MethodInterceptor {
     }
 
     public static void main(String[] args) {
-        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "F:\\tmp");
         Enhancer enhancer = new Enhancer();
         enhancer.setInterfaces(new Class[]{Subject.class, Subject1.class});
         enhancer.setCallback(new RealSubjectMethodInterceptor());

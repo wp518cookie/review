@@ -12,9 +12,12 @@
 			http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
 			http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd">
 	<task:annotation-driven />
+	<!-- 加载配置属性文件 -->
+	<context:property-placeholder ignore-unresolvable="true" location="classpath:/dev/jdbc.properties" />
+	<!-- 加载应用属性实例，可通过  @Value("#{APP_PROP['jdbc.driver']}") String jdbcDriver 方式引用 -->
 	<context:annotation-config />
-	<context:component-scan base-package="*"/>
-	<!--<import resource="classpath:applicationContext-database.xml" />-->
-	<!--<import resource="classpath:applicationContext-mvc.xml" />-->
+	<context:component-scan base-package="ee"/>
+	<import resource="classpath:applicationContext-database.xml" />
+	<import resource="classpath:applicationContext-mvc.xml" />
 	<import resource="classpath:spring-beans.xml"/>
 </beans>
