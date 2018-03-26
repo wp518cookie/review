@@ -5,4 +5,5 @@ package ee.service;
  */
 public interface ITestService {
     String testMethod1();
+    String testMethod2() throws Exception;
 }

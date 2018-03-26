@@ -20,4 +20,15 @@ public class TestController {
     public String test1() {
         return iTestService.testMethod1();
     }
+
+    @RequestMapping("/test2")
+    @ResponseBody
+    public String test2() {
+        try {
+            return iTestService.testMethod2();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "sheng ming shi shi wu";
+        }
+    }
 }
