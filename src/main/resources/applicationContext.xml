@@ -15,9 +15,38 @@
 	<!-- 加载配置属性文件 -->
 	<context:property-placeholder ignore-unresolvable="true" location="classpath:/dev/jdbc.properties" />
 	<!-- 加载应用属性实例，可通过  @Value("#{APP_PROP['jdbc.driver']}") String jdbcDriver 方式引用 -->
-	<context:annotation-config />
-	<context:component-scan base-package="ee"/>
+	<context:component-scan base-package="ee">
+		<!--<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>-->
+	</context:component-scan>
+	<bean class="ee.util.MyApplicationContext"></bean>
 	<import resource="classpath:applicationContext-database.xml" />
 	<import resource="classpath:applicationContext-mvc.xml" />
 	<import resource="classpath:spring-beans.xml"/>
+	<bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig" >
+		<!--最大空闲数-->
+		<property name="maxIdle" value="${redis.maxIdle}" />
+		<!--最大建立连接等待时间-->
+		<property name="maxWaitMillis" value="${redis.maxWait}" />
+		<!--是否在从池中取出连接前进行检验,如果检验失败,则从池中去除连接并尝试取出另一个-->
+		<property name="testOnBorrow" value="${redis.testOnBorrow}" />
+		<property name="maxTotal" value="${redis.maxTotal}" />
+		<property name="minIdle" value="${redis.minIdle}" />
+		<property name=""
+	</bean >
+	<bean id="jedisCluster"  class="ee.util.JedisClusterFactory" >
+		<property name="addressConfig">
+			<value>classpath:redis.properties</value>
+		</property>
+		<property name="addressKeyPrefix" value="cluster"/>   <!--  属性文件里  key的前缀 -->
+		<property name="timeout" value="300000" />
+		<property name="maxRedirections" value="6" />
+		<property name="genericObjectPoolConfig" ref="poolConfig" />
+	</bean >
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:redis.properties</value>
+			</list>
+		</property>
+	</bean>
 </beans>

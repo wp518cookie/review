@@ -1,10 +1,14 @@
 package ee.api;
 
+import ee.bean.Test;
 import ee.service.ITestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by Administrator on 2018/3/22.
@@ -30,5 +34,17 @@ public class TestController {
             e.printStackTrace();
             return "sheng ming shi shi wu";
         }
+    }
+
+    @RequestMapping("/test3")
+    @ResponseBody
+    public String test3(HttpServletRequest request, @RequestBody Test test) {
+        return iTestService.testMethod3(test, request);
+    }
+
+    @RequestMapping("/test4")
+    @ResponseBody
+    public String test4() {
+        return iTestService.testMethod4();
     }
 }
