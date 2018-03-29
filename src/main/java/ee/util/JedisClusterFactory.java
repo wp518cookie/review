@@ -1,5 +1,9 @@
 package ee.util;
 
+/**
+ * Created by EX_WLJR_WUPING on 2017/11/23.
+ */
+
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -12,20 +16,14 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/**
- * Created by Administrator on 2018/3/28.*/
-
-
 public class JedisClusterFactory implements FactoryBean<JedisCluster>, InitializingBean {
-
     private Resource addressConfig;
-    private String addressKeyPrefix ;
-
+    private String addressKeyPrefix;
     private JedisCluster jedisCluster;
     private Integer timeout;
     private Integer maxRedirections;
+    private String password;
     private GenericObjectPoolConfig genericObjectPoolConfig;
-
     private Pattern p = Pattern.compile("^.+[:]\\d{1,5}\\s*$");
 
     @Override
@@ -43,33 +41,24 @@ public class JedisClusterFactory implements FactoryBean<JedisCluster>, Initializ
         return true;
     }
 
-
-
     private Set<HostAndPort> parseHostAndPort() throws Exception {
         try {
             Properties prop = new Properties();
             prop.load(this.addressConfig.getInputStream());
-
             Set<HostAndPort> haps = new HashSet<HostAndPort>();
             for (Object key : prop.keySet()) {
-
                 if (!((String) key).startsWith(addressKeyPrefix)) {
                     continue;
                 }
-
                 String val = (String) prop.get(key);
-
                 boolean isIpPort = p.matcher(val).matches();
-
                 if (!isIpPort) {
                     throw new IllegalArgumentException("ip 或 port 不合法");
                 }
                 String[] ipAndPort = val.split(":");
-
                 HostAndPort hap = new HostAndPort(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
                 haps.add(hap);
             }
-
             return haps;
         } catch (IllegalArgumentException ex) {
             throw ex;
@@ -81,10 +70,9 @@ public class JedisClusterFactory implements FactoryBean<JedisCluster>, Initializ
     @Override
     public void afterPropertiesSet() throws Exception {
         Set<HostAndPort> haps = this.parseHostAndPort();
-
-        jedisCluster = new JedisCluster(haps, timeout, maxRedirections,genericObjectPoolConfig);
-
+            jedisCluster = new JedisCluster(haps, genericObjectPoolConfig);
     }
+
     public void setAddressConfig(Resource addressConfig) {
         this.addressConfig = addressConfig;
     }
@@ -105,4 +93,11 @@ public class JedisClusterFactory implements FactoryBean<JedisCluster>, Initializ
         this.genericObjectPoolConfig = genericObjectPoolConfig;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
