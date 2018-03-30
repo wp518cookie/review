@@ -12,12 +12,12 @@ import redis.clients.jedis.JedisCluster;
  */
 public class TestRedis extends BaseJUnitTest {
     @Autowired
-    private JedisCluster jedisCluster;
-    @Autowired
-    private Jedis jedis;
+    private JedisCluster jedis;
+//    @Autowired
+//    private Jedis jedis;
     @Test
     public void testJedis() {
-        String result = jedisCluster.get("hello");
-        System.out.println(result);
+        String result = jedis.set("hello", "world");
+        System.out.println(jedis.get("hello"));
     }
 }

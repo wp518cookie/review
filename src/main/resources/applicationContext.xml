@@ -38,7 +38,7 @@
 		</property>
 		<property name="addressKeyPrefix" value="cluster"/>   <!--  属性文件里  key的前缀 -->
 		<property name="timeout" value="300000" />
-		<property name="maxRedirections" value="6" />
+		<property name="maxRedirections" value="1000" />
 		<property name="genericObjectPoolConfig" ref="poolConfig" />
 		<property name="password" value="123456"/>
 	</bean >
