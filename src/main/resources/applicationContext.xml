@@ -22,6 +22,7 @@
 	<import resource="classpath:applicationContext-database.xml" />
 	<import resource="classpath:applicationContext-mvc.xml" />
 	<import resource="classpath:spring-beans.xml"/>
+	<import resource="classpath:application-dubbo.xml"/>
 	<bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig" >
 		<!--最大空闲数-->
 		<property name="maxIdle" value="${redis.maxIdle}" />
