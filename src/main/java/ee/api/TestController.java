@@ -1,7 +1,9 @@
 package ee.api;
 
 import ee.bean.Test;
+import ee.bean.User;
 import ee.service.ITestService;
+import ee.service.ITransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +20,8 @@ import javax.servlet.http.HttpServletRequest;
 public class TestController {
     @Autowired
     private ITestService iTestService;
+    @Autowired
+    private ITransactionService transactionService;
 
     @RequestMapping("/test1")
     @ResponseBody
@@ -46,5 +50,13 @@ public class TestController {
     @ResponseBody
     public String test4() {
         return iTestService.testMethod4();
+    }
+
+    @RequestMapping("/transaction1")
+    @ResponseBody
+    public String test5() {
+        User user = new User("hello", 5);
+        transactionService.insertUser1(user);
+        return "success";
     }
 }

@@ -3,15 +3,15 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 			http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
-    <dubbo:application name="dubbo-demo" />
-    <!-- zookeeper注册中心 -->
+    <!--<dubbo:application name="dubbo-demo" />
+    &lt;!&ndash; zookeeper注册中心 &ndash;&gt;
     <dubbo:registry address="zookeeper://106.14.115.150:2181" />
     <dubbo:protocol name="dubbo" port="20880" />
 
-    <!-- 和本地bean一样实现服务 -->
+    &lt;!&ndash; 和本地bean一样实现服务 &ndash;&gt;
     <bean id="demoService" class="dubbo.demo.DemoServiceImpl" />
 
-    <!-- 向注册中心注册暴漏服务地址,注册服务 -->
+    &lt;!&ndash; 向注册中心注册暴漏服务地址,注册服务 &ndash;&gt;
     <dubbo:service interface="dubbo.demo.DemoService"
-                   ref="demoService" executes="10" />
+                   ref="demoService" executes="10" />-->
 </beans>

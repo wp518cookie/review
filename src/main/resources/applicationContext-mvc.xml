@@ -37,4 +37,15 @@
 		<aop:pointcut id="daoMethod" expression="execution(* ee.service.impl.*.*(..))"/>
 		<aop:advisor advice-ref="daoAdvice" pointcut-ref="daoMethod"/>
 	</aop:config>-->
+
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<bean class="ee.api.TestInterceptor"/>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<bean class="ee.api.TestInterceptor1"/>
+		</mvc:interceptor>
+	</mvc:interceptors>
 </beans>

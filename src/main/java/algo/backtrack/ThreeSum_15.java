@@ -67,11 +67,14 @@ public class ThreeSum_15 {
     }
 
     public static List<List<Integer>> threeSum(int[] nums) {
-        Arrays.sort(nums);
         List<List<Integer>> list = new ArrayList();
+        if (nums == null || nums.length < 3) {
+            return list;
+        }
+        Arrays.sort(nums);
         int mid, right;
         int max = nums[nums.length - 1] * 2;
-        for (int left = 0; left < nums.length && nums[left] <= 0; left++) {
+        for (int left = 0; left < nums.length - 2 && nums[left] <= 0; left++) {
             if (nums[left] + max < 0) {
                 continue;
             }

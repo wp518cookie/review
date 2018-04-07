@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -29,6 +30,7 @@ public class TestServiceImpl implements ITestService {
 
     //编程式事务
     public String testMethod1() {
+        System.out.println("start");
         Test test = new Test("wp", 45);
         Object result = transactionTemplate.execute(new TransactionCallback(){
             public Object doInTransaction(TransactionStatus var1) {
@@ -42,11 +44,12 @@ public class TestServiceImpl implements ITestService {
                 return null;
             }
         });
+        System.out.println("done");
         return "bian cheng shi shi wu";
     }
 
     //声明式事务
-    @Transactional(noRollbackFor = {NullPointerException.class})
+    @Transactional(propagation = Propagation.MANDATORY)
     public String testMethod2() throws Exception {
         Test test = new Test("robin", 1);
         testDao.insert(test);
