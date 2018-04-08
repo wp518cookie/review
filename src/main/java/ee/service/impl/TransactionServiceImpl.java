@@ -16,17 +16,20 @@ public class TransactionServiceImpl implements ITransactionService {
     @Autowired
     public UserDao userDao;
 
-    @Transactional(propagation= Propagation.REQUIRES_NEW)
-    public void insertUser1(User user) {
-        insertUser2(user);
-        user.setAge(1);
-        userDao.insert(user);
-        throw new NullPointerException();
+    @Transactional(propagation= Propagation.MANDATORY)
+    public void insertUser1() {
+            User user = new User(3, "insertUser1", 1);
+            userDao.insert(user);
     }
 
-    @Transactional(propagation= Propagation.NOT_SUPPORTED)
-    public void insertUser2(User user) {
-        user.setAge(2);
+    @Transactional(propagation= Propagation.MANDATORY)
+    public void insertUser2() {
+        User user = new User(4, "insertUser2", 2);
         userDao.insert(user);
+    }
+
+    public void transaction1() {
+        insertUser1();
+        insertUser2();
     }
 }
