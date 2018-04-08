@@ -55,8 +55,7 @@ public class TestController {
     @RequestMapping("/transaction1")
     @ResponseBody
     public String test5() {
-        User user = new User("hello", 5);
-        transactionService.insertUser1(user);
+        transactionService.transaction1();
         return "success";
     }
 }
