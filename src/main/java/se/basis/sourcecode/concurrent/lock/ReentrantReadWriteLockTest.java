@@ -9,9 +9,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Created by ping.wu on 2018/4/9.
  */
 public class ReentrantReadWriteLockTest {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception  {
         ReadWriteLock lock = new ReentrantReadWriteLock();
+        new Thread3(lock).start();
+        TimeUnit.SECONDS.sleep(1);
         new Thread1(lock).start();
+        new Thread2(lock).start();
+
     }
 
     static class Thread1 extends Thread {
@@ -22,7 +26,6 @@ public class ReentrantReadWriteLockTest {
         }
 
         public void run() {
-            System.out.println("Threa1 start running");
             lock.readLock().lock();
             try {
                 System.out.println("Thread1 read start");
@@ -44,7 +47,6 @@ public class ReentrantReadWriteLockTest {
         }
 
         public void run() {
-            System.out.println("Threa2 start running");
             lock.readLock().lock();
             try {
                 System.out.println("Thread2 read start");
@@ -66,8 +68,7 @@ public class ReentrantReadWriteLockTest {
         }
 
         public void run() {
-            System.out.println("Threa3 start running");
-            lock.readLock().lock();
+            lock.writeLock().lock();
             try {
                 System.out.println("Thread3 read start");
                 TimeUnit.SECONDS.sleep(3);
@@ -75,7 +76,7 @@ public class ReentrantReadWriteLockTest {
             } catch (InterruptedException e) {
                 System.out.println("Thread3 interrupted");
             } finally {
-                lock.readLock().unlock();
+                lock.writeLock().unlock();
             }
         }
     }
