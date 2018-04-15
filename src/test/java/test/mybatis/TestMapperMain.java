@@ -53,31 +53,9 @@ public class TestMapperMain {
             TestMapper testMapper = sqlSession.getMapper(TestMapper.class);
             ee.bean.Test param = new ee.bean.Test("tom", 7);
             ee.bean.Test test = testMapper.getUser(param);
-
             System.out.println("name: " + test.getName() + "|age: " + test.getAge());
         } finally {
             sqlSession.close();
-        }
-    }
-
-    public void generateClass() {
-        String name = "ProxySubject";
-        byte[] data = ProxyGenerator.generateProxyClass(name,new Class[]{Subject1.class, Subject.class});
-        FileOutputStream out =null;
-        try {
-            out = new FileOutputStream(name+".class");
-            System.out.println((new File("hello")).getAbsolutePath());
-            out.write(data);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }finally {
-            if(null!=out) try {
-                out.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 }
