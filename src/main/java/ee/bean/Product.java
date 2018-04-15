@@ -6,6 +6,7 @@ package ee.bean;
 public class Product {
     private int id;
     private int count;
+    private ProductType productType;
 
     public Product() {
 
