@@ -11,13 +11,15 @@ import redis.clients.jedis.JedisCluster;
  * Created by Administrator on 2018/3/29.
  */
 public class TestRedis extends BaseJUnitTest {
+    //    @Autowired
+//    private JedisCluster jedis;
     @Autowired
-    private JedisCluster jedis;
-//    @Autowired
-//    private Jedis jedis;
+    private Jedis jedis;
+
     @Test
-    public void testJedis() {
-        String result = jedis.set("hello", "world");
+    public void testJedisLock() {
+        jedis.auth("123456");
+        jedis.set("hello", "world");
         System.out.println(jedis.get("hello"));
     }
 }
