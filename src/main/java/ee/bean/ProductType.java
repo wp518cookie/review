@@ -8,7 +8,6 @@ public enum ProductType {
 
     private String productId;
     private String productName;
-    private static Map<>
 
     static {
 
