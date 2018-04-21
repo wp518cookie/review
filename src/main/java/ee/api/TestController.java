@@ -58,4 +58,11 @@ public class TestController {
         transactionService.transaction1();
         return "success";
     }
+
+    @RequestMapping("/lockTest")
+    @ResponseBody
+    public String lockTest() throws Exception {
+        transactionService.exclusiveLockTest();
+        return "success";
+    }
 }

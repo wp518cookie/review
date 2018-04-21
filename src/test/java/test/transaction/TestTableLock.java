@@ -32,12 +32,12 @@ public class TestTableLock extends BaseJUnitTest {
 
     @Transactional
     public void testGetData() {
-        productMapper.getTableLock();
+        productMapper.getTableLock(1L);
+        try {
+        TimeUnit.SECONDS.sleep(2);
         Product product = new Product();
         product.setId(1);
         productMapper.updateCount(product);
-        try {
-            TimeUnit.SECONDS.sleep(2);
         } catch (InterruptedException e) {
             log.info("thread interrupted!");
         }

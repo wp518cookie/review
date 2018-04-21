@@ -12,10 +12,10 @@
     <update id="updateCount" parameterType="ee.bean.Product">
         UPDATE product SET count = count - 1 WHERE id = #{id, jdbcType=DECIMAL} and count &gt;= 1
     </update>
-    <select id="getTableLock" resultMap="productResultMap">
-        SELECT * FROM product For UPDATE
+    <select id="getTableLock" resultMap="productResultMap" parameterType="java.lang.Long">
+        SELECT * FROM product WHERE id = #{id, jdbcType=DECIMAL} For UPDATE
     </select>
-    <select id="getProduct" resultMap="productResultMap">
-        SELECT * FROM product
-    </select>
+    <update id="decreCount" parameterType="ee.bean.Product">
+        UPDATE product SET count = #{count, jdbcType=DECIMAL} - 1 WHERE id = #{id, jdbcType=DECIMAL}
+    </update>
 </mapper>

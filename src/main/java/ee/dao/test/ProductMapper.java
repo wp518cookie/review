@@ -10,6 +10,6 @@ import java.util.List;
 public interface ProductMapper {
     void insert(Product product);
     int updateCount(Product product);
-    void getTableLock();
-    List<Product> getProduct();
+    Product getTableLock(Long id);
+    int decreCount(Product product);
 }
